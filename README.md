@@ -13,8 +13,7 @@ Ce depot contient les fichiers utiles pour comprendre et presenter le projet de 
 │   └── index.html
 ├── documentation/
 │   ├── EXPLICATION_PROJET_DASHBOARD.md
-│   ├── RAPPORT.md
-│   └── GUIDE_TABLEAU.md
+│   └── RAPPORT.md
 └── rendu/
     └── rendu visualisation.pptx
 ```
