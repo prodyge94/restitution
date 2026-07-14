@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+
+# Local environments
+.venv/
+venv/
+
+# Generated data kept out of the repository
+data/raw/
+data/processed/
+*.parquet
+
+# Local OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/

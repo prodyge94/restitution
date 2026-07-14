@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard - US Flight Delays and Cancellations 2015</title>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --surface: #ffffff;
+      --surface-soft: #eef2f3;
+      --ink: #172126;
+      --muted: #5f6b70;
+      --line: #d8dfe2;
+      --teal: #087f8c;
+      --teal-soft: #d9eef0;
+      --coral: #e45c3a;
+      --coral-soft: #fde5df;
+      --gold: #d69e2e;
+      --blue: #3977a8;
+      --green: #388b6a;
+      --shadow: 0 3px 12px rgba(23, 33, 38, 0.06);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    button, select { font: inherit; }
+
+    .dashboard {
+      width: min(1500px, 100%);
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 18px;
+    }
+
+    h1, h2, p { margin: 0; }
+
+    h1 {
+      font-size: clamp(24px, 2.5vw, 36px);
+      line-height: 1.15;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 17px;
+      line-height: 1.25;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    .dataset-label {
+      color: var(--teal);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-top: 7px;
+      max-width: 780px;
+    }
+
+    .scope {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: right;
+      border-left: 3px solid var(--teal);
+      padding: 4px 0 4px 14px;
+    }
+
+    .scope strong {
+      display: block;
+      color: var(--ink);
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .kpi {
+      min-width: 0;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      box-shadow: var(--shadow);
+      padding: 16px 18px;
+    }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .kpi-value {
+      display: block;
+      font-size: clamp(25px, 2.2vw, 34px);
+      font-weight: 750;
+      line-height: 1.15;
+      margin: 5px 0 3px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kpi-context {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .decision-strip {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 12px;
+      background: var(--ink);
+      color: #ffffff;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+    }
+
+    .decision-strip .tag {
+      color: #b9eef0;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .decision-strip strong { font-size: 14px; }
+
+    .decision-strip .detail {
+      color: #dbe2e4;
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(340px, 0.75fr);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr) minmax(0, 0.9fr);
+      gap: 12px;
+    }
+
+    .panel {
+      min-width: 0;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+
+    .panel-header p {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+
+    .legend i {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .map-shell {
+      position: relative;
+      min-height: 390px;
+    }
+
+    #route-map {
+      display: block;
+      width: 100%;
+      height: 390px;
+    }
+
+    .map-status {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    .route-detail {
+      display: grid;
+      grid-template-columns: minmax(150px, 1.4fr) repeat(3, minmax(85px, 1fr));
+      gap: 10px;
+      align-items: center;
+      background: var(--surface-soft);
+      border-left: 4px solid var(--coral);
+      padding: 11px 12px;
+    }
+
+    .route-name {
+      font-size: 20px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .route-city { color: var(--muted); font-size: 12px; }
+
+    .detail-metric { border-left: 1px solid var(--line); padding-left: 10px; }
+    .detail-metric span { display: block; color: var(--muted); font-size: 11px; }
+    .detail-metric strong { font-size: 16px; font-variant-numeric: tabular-nums; }
+
+    .route-list {
+      display: grid;
+      gap: 2px;
+    }
+
+    .route-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 30px minmax(84px, 1fr) 78px 70px;
+      gap: 8px;
+      align-items: center;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink);
+      padding: 9px 6px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .route-row:hover, .route-row:focus-visible { background: var(--surface-soft); }
+    .route-row.is-selected { background: var(--coral-soft); }
+
+    .route-rank { color: var(--muted); font-size: 12px; text-align: center; }
+    .route-code { font-weight: 700; }
+    .route-stat { text-align: right; font-size: 12px; font-variant-numeric: tabular-nums; }
+    .route-stat strong { display: block; font-size: 13px; }
+    .route-stat span { color: var(--muted); }
+
+    .list-head {
+      display: grid;
+      grid-template-columns: 30px minmax(84px, 1fr) 78px 70px;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 2px 6px 4px;
+      text-align: right;
+    }
+
+    .list-head span:nth-child(2) { text-align: left; }
+
+    .chart-svg {
+      display: block;
+      width: 100%;
+      min-height: 260px;
+    }
+
+    .axis text, .chart-label { fill: var(--muted); font-size: 11px; }
+    .axis path, .axis line { stroke: var(--line); }
+    .grid line { stroke: var(--line); stroke-opacity: 0.75; }
+    .grid path { display: none; }
+
+    .cause-list { display: grid; gap: 14px; padding-top: 6px; }
+
+    .cause-row {
+      display: grid;
+      grid-template-columns: minmax(110px, 1fr) 2.3fr 48px;
+      gap: 9px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .track { height: 9px; background: var(--surface-soft); overflow: hidden; }
+    .fill { height: 100%; background: var(--teal); }
+    .cause-row:first-child .fill { background: var(--coral); }
+    .cause-value { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    .cause-note {
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--line);
+      margin-top: 18px;
+      padding-top: 12px;
+    }
+
+    .airline-leaders { display: grid; gap: 10px; }
+
+    .airline-item {
+      display: grid;
+      grid-template-columns: minmax(115px, 1fr) 2fr 54px;
+      gap: 8px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .airline-bar { height: 8px; background: var(--surface-soft); position: relative; }
+    .airline-dot { position: absolute; top: 50%; width: 10px; height: 10px; border-radius: 50%; background: var(--blue); transform: translate(-50%, -50%); }
+    .airline-value { text-align: right; font-weight: 700; }
+
+    .benchmark {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      border-top: 1px solid var(--line);
+      margin-top: 16px;
+      padding-top: 12px;
+    }
+
+    .benchmark span { display: block; color: var(--muted); font-size: 11px; }
+    .benchmark strong { font-size: 15px; }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 12px;
+      padding: 0 2px;
+    }
+
+    .tooltip {
+      position: absolute;
+      visibility: hidden;
+      pointer-events: none;
+      background: var(--ink);
+      color: #ffffff;
+      padding: 7px 9px;
+      border-radius: 4px;
+      font-size: 12px;
+      box-shadow: var(--shadow);
+      z-index: 10;
+    }
+
+    @media (max-width: 1050px) {
+      .main-grid, .bottom-grid { grid-template-columns: 1fr; }
+      .route-list { grid-template-columns: 1fr 1fr; column-gap: 14px; }
+      .list-head { display: none; }
+      .map-shell, #route-map { min-height: 340px; height: 340px; }
+    }
+
+    @media (max-width: 720px) {
+      .dashboard { padding: 16px; }
+      .topbar { display: block; }
+      .scope { margin-top: 12px; text-align: left; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .decision-strip { grid-template-columns: 1fr; }
+      .decision-strip .detail { text-align: left; }
+      .route-list { grid-template-columns: 1fr; }
+      .route-detail { grid-template-columns: 1fr 1fr; }
+      .route-detail > div:first-child { grid-column: 1 / -1; }
+      .detail-metric { border-left: 0; padding-left: 0; }
+      .map-shell, #route-map { min-height: 300px; height: 300px; }
+      .footer { display: block; }
+      .footer span { display: block; margin-top: 4px; }
+    }
+
+    @media (max-width: 420px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+      .route-row { grid-template-columns: 24px minmax(75px, 1fr) 66px 62px; gap: 5px; }
+      .route-detail { grid-template-columns: 1fr; }
+      .route-detail > div:first-child { grid-column: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="dashboard">
+    <header class="topbar">
+      <div>
+        <p class="dataset-label">Dataset analysé</p>
+        <h1>US Flight Delays and Cancellations 2015</h1>
+        <p class="subtitle">Performance des vols domestiques américains, avec un focus opérationnel sur les routes aériennes les plus sensibles.</p>
+      </div>
+      <div class="scope">
+        <strong>États-Unis · Janvier à décembre 2015</strong>
+        Vols, compagnies, aéroports, retards et annulations
+      </div>
+    </header>
+
+    <section class="kpi-grid" aria-label="Indicateurs clés">
+      <article class="kpi">
+        <span class="kpi-label">Vols analysés</span>
+        <strong class="kpi-value">5,82 M</strong>
+        <span class="kpi-context">14 compagnies aériennes</span>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Vols arrivés en retard</span>
+        <strong class="kpi-value">17,9 %</strong>
+        <span class="kpi-context">Retard supérieur à 15 minutes</span>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Retard moyen à l'arrivée</span>
+        <strong class="kpi-value">+4,4 min</strong>
+        <span class="kpi-context">Médiane : 5 min en avance</span>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Vols annulés</span>
+        <strong class="kpi-value">1,54 %</strong>
+        <span class="kpi-context">89 884 annulations</span>
+      </article>
+    </section>
+
+    <section class="decision-strip" aria-label="Conclusion principale">
+      <span class="tag">Priorité réseau</span>
+      <strong>SFO → LAX combine le plus fort volume exposé au retard : 13 400 vols et 26,2 % d'arrivées tardives.</strong>
+      <span class="detail">À surveiller en priorité avec LAX → SFO et LAS → LAX</span>
+    </section>
+
+    <section class="main-grid">
+      <article class="panel" aria-labelledby="map-title">
+        <div class="panel-header">
+          <div>
+            <h2 id="map-title">Routes aériennes les plus sensibles</h2>
+            <p>Le score combine le volume de vols et le taux de retard.</p>
+          </div>
+          <div class="legend" aria-label="Légende de la carte">
+            <span><i style="background: var(--coral)"></i> Route sélectionnée</span>
+            <span><i style="background: var(--teal)"></i> Autres routes</span>
+          </div>
+        </div>
+        <div class="map-shell">
+          <svg id="route-map" role="img" aria-labelledby="map-title map-desc"></svg>
+          <p id="map-desc" class="sr-only" hidden>Carte des États-Unis représentant les principales routes aériennes sensibles aux retards.</p>
+          <div class="map-status" id="map-status">Chargement de la carte…</div>
+          <div class="tooltip" id="map-tooltip"></div>
+        </div>
+        <div class="route-detail" aria-live="polite">
+          <div>
+            <div class="route-name" id="detail-route">SFO → LAX</div>
+            <div class="route-city" id="detail-cities">San Francisco → Los Angeles</div>
+          </div>
+          <div class="detail-metric"><span>Volume</span><strong id="detail-volume">13 400 vols</strong></div>
+          <div class="detail-metric"><span>Taux de retard</span><strong id="detail-rate">26,2 %</strong></div>
+          <div class="detail-metric"><span>Retard moyen</span><strong id="detail-delay">+11,4 min</strong></div>
+        </div>
+      </article>
+
+      <aside class="panel" aria-labelledby="routes-title">
+        <div class="panel-header">
+          <div>
+            <h2 id="routes-title">Top 8 des routes prioritaires</h2>
+            <p>Sélectionnez une route pour la localiser.</p>
+          </div>
+        </div>
+        <div class="list-head" aria-hidden="true"><span>#</span><span>Route</span><span>Vols</span><span>Retard</span></div>
+        <div class="route-list" id="route-list"></div>
+      </aside>
+    </section>
+
+    <section class="bottom-grid">
+      <article class="panel" aria-labelledby="hour-title">
+        <div class="panel-header">
+          <div>
+            <h2 id="hour-title">Le risque augmente au fil de la journée</h2>
+            <p>Taux de retard à l'arrivée selon l'heure de départ.</p>
+          </div>
+          <div class="legend"><span><i style="background: var(--teal)"></i> Taux de retard</span></div>
+        </div>
+        <svg id="hour-chart" class="chart-svg" role="img" aria-label="Courbe du taux de retard par heure de départ"></svg>
+      </article>
+
+      <article class="panel" aria-labelledby="cause-title">
+        <div class="panel-header">
+          <div>
+            <h2 id="cause-title">Origine des minutes de retard</h2>
+            <p>Répartition des causes déclarées.</p>
+          </div>
+        </div>
+        <div class="cause-list" id="cause-list"></div>
+        <p class="cause-note"><strong>72 %</strong> des minutes de retard proviennent des avions arrivés tardivement et des compagnies.</p>
+      </article>
+
+      <article class="panel" aria-labelledby="airline-title">
+        <div class="panel-header">
+          <div>
+            <h2 id="airline-title">Comparaison des compagnies</h2>
+            <p>Taux de vols arrivés en retard.</p>
+          </div>
+        </div>
+        <div class="airline-leaders" id="airline-list"></div>
+        <div class="benchmark">
+          <div><span>Meilleure</span><strong>Hawaiian · 10,5 %</strong></div>
+          <div><span>Plus exposée</span><strong>Spirit · 28,8 %</strong></div>
+        </div>
+      </article>
+    </section>
+
+    <footer class="footer">
+      <span>Source : Kaggle, 2015 Flight Delays and Cancellations · périmètre domestique US</span>
+      <span>Score route = nombre de vols × taux de retard</span>
+    </footer>
+  </main>
+
+  <script>
+    const routes = [
+      { route: "SFO → LAX", from: "San Francisco", to: "Los Angeles", volume: 13400, rate: 26.231, delay: 11.44, score: 3515, a: [-122.375, 37.619], b: [-118.408, 33.943] },
+      { route: "LAX → SFO", from: "Los Angeles", to: "San Francisco", volume: 13109, rate: 25.189, delay: 10.739, score: 3302, a: [-118.408, 33.943], b: [-122.375, 37.619] },
+      { route: "LAS → LAX", from: "Las Vegas", to: "Los Angeles", volume: 9651, rate: 26.982, delay: 11.975, score: 2604, a: [-115.152, 36.08], b: [-118.408, 33.943] },
+      { route: "ORD → LGA", from: "Chicago", to: "New York", volume: 9101, rate: 25.228, delay: 10.287, score: 2296, a: [-87.904, 41.98], b: [-73.873, 40.777] },
+      { route: "JFK → LAX", from: "New York", to: "Los Angeles", volume: 11853, rate: 17.599, delay: -2.672, score: 2086, a: [-73.779, 40.64], b: [-118.408, 33.943] },
+      { route: "LAX → LAS", from: "Los Angeles", to: "Las Vegas", volume: 9522, rate: 21.876, delay: 8.656, score: 2083, a: [-118.408, 33.943], b: [-115.152, 36.08] },
+      { route: "LAX → JFK", from: "Los Angeles", to: "New York", volume: 11851, rate: 17.416, delay: 0.614, score: 2064, a: [-118.408, 33.943], b: [-73.779, 40.64] },
+      { route: "ORD → LAX", from: "Chicago", to: "Los Angeles", volume: 7826, rate: 26.271, delay: 8.32, score: 2056, a: [-87.904, 41.98], b: [-118.408, 33.943] }
+    ];
+
+    const hourly = [
+      [5, 6.902], [6, 8.575], [7, 10.658], [8, 12.287], [9, 13.584], [10, 14.77],
+      [11, 15.723], [12, 16.876], [13, 18.281], [14, 20.048], [15, 20.711], [16, 22.285],
+      [17, 23.67], [18, 25.101], [19, 25.452], [20, 25.523], [21, 23.577], [22, 22.093], [23, 18.407]
+    ].map(([hour, rate]) => ({ hour, rate }));
+
+    const causes = [
+      { name: "Avion en retard", value: 39.84 },
+      { name: "Compagnie", value: 32.20 },
+      { name: "Système aérien", value: 22.88 },
+      { name: "Météo", value: 4.95 },
+      { name: "Sécurité", value: 0.13 }
+    ];
+
+    const airlines = [
+      { name: "Spirit", rate: 28.792 },
+      { name: "Frontier", rate: 25.365 },
+      { name: "JetBlue", rate: 21.850 },
+      { name: "United", rate: 19.951 },
+      { name: "Southwest", rate: 18.297 },
+      { name: "Delta", rate: 12.997 },
+      { name: "Hawaiian", rate: 10.534 }
+    ];
+
+    const formatInt = new Intl.NumberFormat("fr-FR");
+    const format1 = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    let selectedIndex = 0;
+    let mapContext = null;
+
+    function renderRouteList() {
+      const list = document.getElementById("route-list");
+      list.innerHTML = "";
+      routes.forEach((d, i) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `route-row${i === selectedIndex ? " is-selected" : ""}`;
+        button.setAttribute("aria-pressed", String(i === selectedIndex));
+        button.innerHTML = `
+          <span class="route-rank">${i + 1}</span>
+          <span class="route-code">${d.route}</span>
+          <span class="route-stat"><strong>${formatInt.format(d.volume)}</strong><span>vols</span></span>
+          <span class="route-stat"><strong>${format1.format(d.rate)} %</strong><span>retard</span></span>`;
+        button.addEventListener("click", () => selectRoute(i));
+        list.appendChild(button);
+      });
+    }
+
+    function selectRoute(index) {
+      selectedIndex = index;
+      const d = routes[index];
+      document.getElementById("detail-route").textContent = d.route;
+      document.getElementById("detail-cities").textContent = `${d.from} → ${d.to}`;
+      document.getElementById("detail-volume").textContent = `${formatInt.format(d.volume)} vols`;
+      document.getElementById("detail-rate").textContent = `${format1.format(d.rate)} %`;
+      document.getElementById("detail-delay").textContent = `${d.delay >= 0 ? "+" : ""}${format1.format(d.delay)} min`;
+      renderRouteList();
+      updateMapSelection();
+    }
+
+    function arcPath(projection, d) {
+      const start = projection(d.a);
+      const end = projection(d.b);
+      if (!start || !end) return "";
+      const dx = end[0] - start[0];
+      const dy = end[1] - start[1];
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const bend = Math.min(80, Math.max(18, distance * 0.22));
+      const mx = (start[0] + end[0]) / 2;
+      const my = (start[1] + end[1]) / 2 - bend;
+      return `M${start[0]},${start[1]} Q${mx},${my} ${end[0]},${end[1]}`;
+    }
+
+    async function drawMap() {
+      const svg = d3.select("#route-map");
+      const width = Math.max(520, svg.node().clientWidth || 820);
+      const height = 390;
+      svg.attr("viewBox", `0 0 ${width} ${height}`);
+
+      try {
+        const us = await d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json");
+        const states = topojson.feature(us, us.objects.states);
+        const projection = d3.geoAlbersUsa().fitExtent([[18, 12], [width - 18, height - 14]], states);
+        const path = d3.geoPath(projection);
+
+        svg.append("path")
+          .datum(states)
+          .attr("d", path)
+          .attr("fill", "#eef2f3")
+          .attr("stroke", "#c8d1d5")
+          .attr("stroke-width", 0.8);
+
+        svg.append("path")
+          .datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
+          .attr("d", path)
+          .attr("fill", "none")
+          .attr("stroke", "#c8d1d5")
+          .attr("stroke-width", 0.6);
+
+        const routeLayer = svg.append("g").attr("class", "routes-layer");
+        routeLayer.selectAll("path")
+          .data(routes)
+          .join("path")
+          .attr("d", d => arcPath(projection, d))
+          .attr("fill", "none")
+          .attr("stroke-linecap", "round")
+          .style("cursor", "pointer")
+          .on("click", (_, d) => selectRoute(routes.indexOf(d)))
+          .on("mouseenter", function(event, d) {
+            const tooltip = document.getElementById("map-tooltip");
+            tooltip.innerHTML = `<strong>${d.route}</strong><br>${formatInt.format(d.volume)} vols · ${format1.format(d.rate)} % en retard`;
+            tooltip.style.visibility = "visible";
+            const shell = document.querySelector(".map-shell").getBoundingClientRect();
+            tooltip.style.left = `${Math.min(event.clientX - shell.left + 10, shell.width - 190)}px`;
+            tooltip.style.top = `${Math.max(8, event.clientY - shell.top - 48)}px`;
+          })
+          .on("mouseleave", () => { document.getElementById("map-tooltip").style.visibility = "hidden"; });
+
+        const airports = Array.from(new Map(routes.flatMap(d => [
+          [`${d.a[0]},${d.a[1]}`, { code: d.route.slice(0, 3), coord: d.a }],
+          [`${d.b[0]},${d.b[1]}`, { code: d.route.slice(-3), coord: d.b }]
+        ])).values());
+
+        const airportLayer = svg.append("g").attr("class", "airport-layer");
+        airportLayer.selectAll("circle")
+          .data(airports)
+          .join("circle")
+          .attr("cx", d => projection(d.coord)?.[0])
+          .attr("cy", d => projection(d.coord)?.[1])
+          .attr("r", 3.2)
+          .attr("fill", "#ffffff")
+          .attr("stroke", "#087f8c")
+          .attr("stroke-width", 1.8);
+
+        airportLayer.selectAll("text")
+          .data(airports)
+          .join("text")
+          .attr("x", d => (projection(d.coord)?.[0] || 0) + 5)
+          .attr("y", d => (projection(d.coord)?.[1] || 0) - 5)
+          .attr("font-size", 10)
+          .attr("font-weight", 700)
+          .attr("fill", "#172126")
+          .text(d => d.code);
+
+        mapContext = { svg, projection };
+        document.getElementById("map-status").style.display = "none";
+        updateMapSelection();
+      } catch (error) {
+        document.getElementById("map-status").textContent = "La carte nécessite une connexion internet.";
+      }
+    }
+
+    function updateMapSelection() {
+      if (!mapContext) return;
+      mapContext.svg.select(".routes-layer").selectAll("path")
+        .attr("stroke", (_, i) => i === selectedIndex ? "#e45c3a" : "#087f8c")
+        .attr("stroke-opacity", (_, i) => i === selectedIndex ? 1 : 0.42)
+        .attr("stroke-width", (_, i) => i === selectedIndex ? 4 : 2)
+        .each(function(_, i) { if (i === selectedIndex) this.parentNode.appendChild(this); });
+    }
+
+    function drawHourlyChart() {
+      const svg = d3.select("#hour-chart");
+      const width = Math.max(440, svg.node().clientWidth || 600);
+      const height = 260;
+      const margin = { top: 18, right: 18, bottom: 36, left: 42 };
+      svg.attr("viewBox", `0 0 ${width} ${height}`);
+
+      const x = d3.scaleLinear().domain([5, 23]).range([margin.left, width - margin.right]);
+      const y = d3.scaleLinear().domain([0, 30]).range([height - margin.bottom, margin.top]);
+
+      svg.append("g").attr("class", "grid").attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).ticks(4).tickSize(-(width - margin.left - margin.right)).tickFormat(""));
+      svg.append("g").attr("class", "axis").attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).tickValues([5, 8, 11, 14, 17, 20, 23]).tickFormat(d => `${d}h`));
+      svg.append("g").attr("class", "axis").attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).ticks(4).tickFormat(d => `${d} %`));
+
+      svg.append("path")
+        .datum(hourly)
+        .attr("fill", "none")
+        .attr("stroke", "#087f8c")
+        .attr("stroke-width", 3)
+        .attr("d", d3.line().x(d => x(d.hour)).y(d => y(d.rate)).curve(d3.curveMonotoneX));
+
+      svg.selectAll("circle.hour-point")
+        .data(hourly)
+        .join("circle")
+        .attr("class", "hour-point")
+        .attr("cx", d => x(d.hour))
+        .attr("cy", d => y(d.rate))
+        .attr("r", d => [5, 20].includes(d.hour) ? 5 : 2.5)
+        .attr("fill", d => [5, 20].includes(d.hour) ? "#e45c3a" : "#087f8c");
+
+      const notes = [hourly[0], hourly.find(d => d.hour === 20)];
+      svg.selectAll("text.annotation")
+        .data(notes)
+        .join("text")
+        .attr("class", "annotation")
+        .attr("x", d => x(d.hour) + (d.hour === 5 ? 8 : -8))
+        .attr("y", d => y(d.rate) - 12)
+        .attr("text-anchor", d => d.hour === 5 ? "start" : "end")
+        .attr("font-size", 11)
+        .attr("font-weight", 700)
+        .attr("fill", "#172126")
+        .text(d => `${d.hour}h · ${format1.format(d.rate)} %`);
+    }
+
+    function renderCauses() {
+      const container = document.getElementById("cause-list");
+      container.innerHTML = causes.map(d => `
+        <div class="cause-row">
+          <span>${d.name}</span>
+          <div class="track" aria-hidden="true"><div class="fill" style="width: ${d.value / causes[0].value * 100}%"></div></div>
+          <span class="cause-value">${format1.format(d.value)} %</span>
+        </div>`).join("");
+    }
+
+    function renderAirlines() {
+      const min = 8;
+      const max = 31;
+      document.getElementById("airline-list").innerHTML = airlines.map(d => {
+        const left = (d.rate - min) / (max - min) * 100;
+        return `<div class="airline-item">
+          <span>${d.name}</span>
+          <div class="airline-bar" aria-hidden="true"><span class="airline-dot" style="left: ${left}%"></span></div>
+          <span class="airline-value">${format1.format(d.rate)} %</span>
+        </div>`;
+      }).join("");
+    }
+
+    renderRouteList();
+    renderCauses();
+    renderAirlines();
+    drawHourlyChart();
+    drawMap();
+  </script>
+</body>
+</html>
