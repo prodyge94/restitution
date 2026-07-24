@@ -1,0 +1,1215 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>US Flight Delays and Cancellations 2015</title>
+  <style>
+    :root {
+      --bg: #f4f7f8;
+      --panel: #ffffff;
+      --panel-soft: #eef4f5;
+      --ink: #142128;
+      --muted: #687985;
+      --line: #dce5e8;
+      --teal: #0c8792;
+      --teal-dark: #075d66;
+      --coral: #eb5a3c;
+      --blue: #2f78a8;
+      --shadow: 0 10px 24px rgba(20, 33, 40, .08);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      letter-spacing: 0;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+    }
+
+    .page {
+      width: min(calc(100vw - 28px), calc((100vh - 22px) * 16 / 9));
+      height: min(calc(100vh - 22px), calc((100vw - 28px) * 9 / 16));
+      margin: 0 auto;
+      padding: 12px 0 8px;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1.12fr) minmax(0, 1fr) auto;
+      gap: 10px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 22px;
+      align-items: start;
+      margin-bottom: 0;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--teal);
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 2.6vw, 46px);
+      line-height: 1;
+      font-weight: 850;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .context {
+      border-left: 4px solid var(--teal);
+      padding-left: 20px;
+      min-width: 300px;
+      text-align: right;
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    .context strong {
+      display: block;
+      color: var(--ink);
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 0;
+    }
+
+    .card,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      min-height: 0;
+      padding: 13px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .value {
+      font-size: 32px;
+      line-height: 1;
+      font-weight: 850;
+    }
+
+    .sub {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .routes-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(300px, .78fr) minmax(300px, .78fr);
+      gap: 10px;
+      margin-bottom: 0;
+      min-height: 0;
+    }
+
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, .95fr) minmax(0, .95fr) minmax(0, 1.05fr);
+      gap: 10px;
+      margin-bottom: 0;
+      min-height: 0;
+    }
+
+    .panel {
+      padding: 13px 16px 12px;
+      overflow: hidden;
+    }
+
+    .routes-grid .panel,
+    .analysis-grid .panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 16px;
+      margin-bottom: 6px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 21px;
+      line-height: 1.1;
+      font-weight: 850;
+    }
+
+    .hint {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .map-wrap {
+      height: auto;
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .route-insights {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      margin-top: 6px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--line);
+      flex: 0 0 72px;
+    }
+
+    .route-insight {
+      background: var(--panel-soft);
+      padding: 8px 12px;
+      min-height: 72px;
+    }
+
+    .route-insight:first-child {
+      border-left: 4px solid var(--coral);
+    }
+
+    .insight-k {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .insight-v {
+      font-size: 19px;
+      line-height: 1;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .insight-note {
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.25;
+      margin-top: 5px;
+    }
+
+    svg { display: block; width: 100%; height: 100%; }
+
+    .state {
+      fill: #edf3f4;
+      stroke: #cbd9dd;
+      stroke-width: 1.2;
+    }
+
+    .route {
+      fill: none;
+      stroke: var(--teal);
+      stroke-width: 1.2;
+      stroke-linecap: round;
+      opacity: .22;
+    }
+
+    .route.hot {
+      stroke: var(--coral);
+      stroke-width: 3.2;
+      opacity: .88;
+    }
+
+    .route.count {
+      stroke: var(--teal);
+      stroke-width: 2.5;
+      opacity: .55;
+    }
+
+    .airport-dot {
+      fill: #fff;
+      stroke: var(--teal);
+      stroke-width: 2.4;
+    }
+
+    .airport-label {
+      fill: var(--ink);
+      font-size: 12px;
+      font-weight: 850;
+      paint-order: stroke;
+      stroke: #fff;
+      stroke-width: 4px;
+      stroke-linejoin: round;
+    }
+
+    .route-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .route-table.compact {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .route-table th {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 750;
+      text-align: right;
+      padding: 4px 5px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .route-table th:nth-child(2),
+    .route-table td:nth-child(2) { text-align: left; }
+
+    .route-table td {
+      text-align: right;
+      padding: 3px 5px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+
+    .route-table.compact td { padding: 5px 5px; }
+
+    .rank {
+      color: var(--muted);
+      font-weight: 700;
+      width: 34px;
+    }
+
+    .route-name {
+      font-size: 13px;
+      font-weight: 850;
+      color: var(--ink);
+    }
+
+    .small-muted {
+      display: block;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 500;
+      margin-top: 1px;
+    }
+
+    .chart {
+      height: 180px;
+      margin-top: 2px;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .chart.tall { height: 180px; }
+
+    .main-chart {
+      height: auto;
+      margin-top: 4px;
+      min-height: 0;
+    }
+
+    .company-chart {
+      height: auto;
+      margin-top: 4px;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .axis { stroke: var(--line); stroke-width: 1; }
+    .grid { stroke: #e8eef0; stroke-width: 1; }
+    .tick { fill: var(--muted); font-size: 10px; }
+    .chart-label { fill: var(--ink); font-size: 11px; font-weight: 800; }
+    .chart-note { fill: var(--muted); font-size: 10px; }
+
+    .bars-row {
+      display: grid;
+      grid-template-columns: 160px 1fr 58px;
+      gap: 12px;
+      align-items: center;
+      margin: 16px 0;
+      font-size: 15px;
+    }
+
+    .bars-row strong { font-size: 17px; }
+
+    .track {
+      height: 11px;
+      background: #edf2f3;
+      overflow: hidden;
+      border-radius: 999px;
+    }
+
+    .fill {
+      height: 100%;
+      background: var(--teal);
+      border-radius: inherit;
+    }
+
+    .fill.coral { background: var(--coral); }
+
+    .company-list {
+      display: grid;
+      gap: 5px;
+      margin-top: 2px;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .company-list.compact {
+      gap: 5px;
+      margin-top: 3px;
+    }
+
+    .company-summary {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      margin-bottom: 5px;
+    }
+
+    .company-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 58px 58px;
+      gap: 7px;
+      align-items: center;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .company-list.compact .company-row {
+      grid-template-columns: minmax(0, 1fr) 62px 62px;
+      gap: 6px;
+      padding-bottom: 5px;
+    }
+
+    .company-code {
+      height: 34px;
+      width: 34px;
+      border-radius: 50%;
+      background: #e8f4f5;
+      color: var(--teal-dark);
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .company-name {
+      font-weight: 800;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      line-height: 1.15;
+    }
+
+    .company-list.compact .company-name {
+      font-size: 12px;
+    }
+
+    .metric {
+      text-align: right;
+      font-weight: 850;
+    }
+
+    .company-list.compact .metric {
+      font-size: 13px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+      margin-top: 2px;
+    }
+
+    .distance-compare {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5px;
+      margin-top: 4px;
+    }
+
+    #longhaul-bars {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #longhaul-bars svg {
+      height: 120px;
+      flex: 0 0 120px;
+    }
+
+    #longhaul-bars .sub {
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .distance-box {
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 5px 7px;
+    }
+
+    .distance-box strong {
+      display: block;
+      font-size: 15px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .distance-box span {
+      color: var(--muted);
+      font-size: 8px;
+      font-weight: 700;
+    }
+
+    .indicator-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 3px;
+      flex: 1 1 auto;
+      min-height: 0;
+      align-content: start;
+    }
+
+    .indicator-row {
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      min-height: 0;
+    }
+
+    .indicator-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .indicator-title {
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 850;
+      line-height: 1.15;
+    }
+
+    .indicator-value {
+      color: var(--ink);
+      font-size: 20px;
+      font-weight: 850;
+      line-height: 1;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .indicator-note {
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.25;
+      margin-top: 4px;
+    }
+
+    .mini-track {
+      height: 7px;
+      background: #e1ebee;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .mini-fill {
+      height: 100%;
+      background: var(--teal);
+      border-radius: inherit;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 2px 2px 0;
+    }
+
+    @media (max-width: 1100px) {
+      header,
+      .routes-grid,
+      .analysis-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .context {
+        min-width: 0;
+        text-align: left;
+      }
+
+      .kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .map-wrap { height: 378px; }
+      .route-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 700px) {
+      .page { width: min(100vw - 20px, 1760px); padding-top: 14px; }
+      .kpis {
+        grid-template-columns: 1fr;
+      }
+
+      .card { min-height: 101px; }
+      .value { font-size: 34px; }
+      .panel { padding: 15px 14px; }
+      .route-insights { grid-template-columns: 1fr; }
+      .company-row { grid-template-columns: minmax(0, 1fr) 70px; }
+      .company-row .metric:last-child { display: none; }
+      .distance-compare { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <p class="eyebrow">Dataset analysé</p>
+        <h1>US Flight Delays and Cancellations 2015</h1>
+        <p class="subtitle">Performance des vols domestiques américains, avec un focus sur les périodes de risque et les routes les plus exposées.</p>
+      </div>
+      <aside class="context">
+        <strong>États-Unis - Janvier à décembre 2015</strong>
+        Vols, compagnies, aéroports, retards et annulations
+      </aside>
+    </header>
+
+    <section class="kpis" id="kpis"></section>
+
+    <section class="analysis-grid">
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <h2>Retards et annulations par semaine</h2>
+            <p class="hint">Turquoise = retards. Bleu = annulations. Fond orange clair = périodes de vacances.</p>
+          </div>
+        </div>
+        <div class="chart main-chart" id="week-chart"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <h2>Périodes à risque</h2>
+            <p class="hint">Classement par taux de retard, du plus élevé au plus faible.</p>
+          </div>
+        </div>
+        <div class="indicator-list" id="holiday-summary"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <h2>Long-courrier vs retard</h2>
+            <p class="hint">Chaque point = une compagnie. Orange = retard au-dessus de la moyenne.</p>
+          </div>
+        </div>
+        <div class="chart company-chart" id="company-reference"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <h2>Compagnies long-courrier</h2>
+            <p class="hint">Barre = part de vols ≥ 1500 miles. À droite = taux de retard.</p>
+          </div>
+        </div>
+        <div class="chart company-chart" id="delay-summary"></div>
+      </article>
+    </section>
+
+    <section class="routes-grid">
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <h2>Routes à risque et routes les plus annulées</h2>
+            <p class="hint">Orange = plus fort taux d'annulation. Turquoise = plus grand nombre d'annulations.</p>
+          </div>
+        </div>
+        <div class="map-wrap">
+          <svg id="map" viewBox="0 0 860 470" role="img" aria-label="Carte des routes aeriennes prioritaires"></svg>
+        </div>
+        <div class="route-insights" id="route-insights"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <h2>Top annulations</h2>
+            <p class="hint">Routes avec le plus grand nombre d'annulations.</p>
+          </div>
+        </div>
+        <table class="route-table compact" aria-label="Top annulations">
+          <thead>
+            <tr><th>#</th><th>Route</th><th>Annul.</th><th>Taux</th></tr>
+          </thead>
+          <tbody id="routes-cancel-table"></tbody>
+        </table>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <h2>Top taux d'annulation</h2>
+            <p class="hint">Routes à fort risque avec au moins 900 vols.</p>
+          </div>
+        </div>
+        <table class="route-table compact" aria-label="Top taux annulation">
+          <thead>
+            <tr><th>#</th><th>Route</th><th>Taux</th><th>Annul.</th></tr>
+          </thead>
+          <tbody id="routes-risk-table"></tbody>
+        </table>
+      </article>
+    </section>
+
+    <footer class="footer">
+      <span>Source : Kaggle, 2015 Flight Delays and Cancellations - Périmètre domestique US</span>
+      <span>Notebook : nettoyage, hypothèses H1/H2/H3, export dashboard_data.js</span>
+    </footer>
+  </main>
+
+  <script src="dashboard_data.js"></script>
+  <script>
+    (() => {
+      const D = window.DASHBOARD_DATA;
+      if (!D) return;
+
+      const nf = new Intl.NumberFormat("fr-FR");
+      const pct = (v, d = 1) => `${Number(v).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d })} %`;
+      const fmt = (v) => nf.format(Math.round(Number(v || 0)));
+      const one = (sel) => document.querySelector(sel);
+
+      function shortPeriod(name) {
+        return String(name)
+          .replace("Noel / fin d'annee", "Noël")
+          .replace("Vacances d'ete", "Été")
+          .replace("Hors vacances", "Hors vac.")
+          .replace("Nouvel an", "Nouvel an");
+      }
+
+      function routeRiskRows(limit = 10) {
+        return D.carte.routes
+          .filter(r => r.vols >= 900)
+          .sort((a, b) => (b.taux - a.taux) || (b.annulations - a.annulations))
+          .slice(0, limit);
+      }
+
+      function routeCancelRows(limit = 10) {
+        return D.h3.top_routes.slice(0, limit);
+      }
+
+      function mapRowsFor(routes) {
+        const byRoute = new Map(D.carte.routes.map(r => [r.route, r]));
+        return routes.map(r => byRoute.get(r.route)).filter(Boolean);
+      }
+
+      function routeEndpointPoints(route) {
+        const nums = String(route.d).match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
+        const [from, to] = String(route.route).split(" -> ");
+        if (nums.length < 6 || !from || !to) return [];
+        return [
+          { code: from, x: nums[0], y: nums[1] },
+          { code: to, x: nums[nums.length - 2], y: nums[nums.length - 1] }
+        ];
+      }
+
+      function setKpis() {
+        const items = [
+          ["Vols analysés", "5,82 M", `${D.kpi.compagnies} compagnies aériennes`],
+          ["Vols en retard", pct(D.kpi.taux_retard_pct), "Retard supérieur à 15 minutes"],
+          ["Vols annulés", pct(D.kpi.taux_annulation_pct), `${fmt(D.kpi.vols_annules)} annulations`],
+          ["Routes concentrées", pct(D.h3.concentration.pct_routes_pour_50pct), "des routes = 50 % des annulations"]
+        ];
+        one("#kpis").innerHTML = items.map(([label, value, sub]) => `
+          <article class="card">
+            <div class="label">${label}</div>
+            <div class="value">${value}</div>
+            <div class="sub">${sub}</div>
+          </article>
+        `).join("");
+
+      }
+
+      function drawMap() {
+        const c = D.carte;
+        const svg = one("#map");
+        svg.setAttribute("viewBox", "55 72 750 352");
+        const riskRows = routeRiskRows(10);
+        const cancelRows = mapRowsFor(routeCancelRows(10));
+        const riskSet = new Set(riskRows.map(r => r.route));
+        const cancelSet = new Set(cancelRows.map(r => r.route));
+        const states = c.etats.map(s => `<path class="state" d="${s}"></path>`).join("");
+        const union = [...new Map([...cancelRows, ...riskRows].map(r => [r.route, r])).values()];
+        const routes = union
+          .sort((a, b) => Number(riskSet.has(a.route)) - Number(riskSet.has(b.route)))
+          .map(r => {
+          const hot = riskSet.has(r.route);
+          const count = cancelSet.has(r.route) && !hot;
+          const cls = hot ? " hot" : count ? " count" : "";
+          const width = hot ? Math.max(3.0, Math.min(5.6, r.taux / 2.0)) : Math.max(2.0, Math.min(3.8, Math.sqrt(r.annulations) / 8.5));
+          const opacity = hot ? .92 : .58;
+          return `<path class="route${cls}" d="${r.d}" style="stroke-width:${width};opacity:${opacity}"></path>`;
+        }).join("");
+
+        const labelOffset = {
+          LGA: [8, -1], JFK: [8, 18], EWR: [8, -20], BOS: [8, -6], DCA: [8, 15],
+          RDU: [8, 14], GSO: [-36, 4], CMH: [-34, -8], CLE: [8, -10],
+          ORD: [8, -8], LAX: [8, 14], SFO: [-34, -6]
+        };
+        const airportMap = new Map();
+        union.flatMap(routeEndpointPoints).forEach(a => airportMap.set(a.code, a));
+        const airports = [...airportMap.values()].map(a => {
+          const off = labelOffset[a.code] || [7, -7];
+          return `<circle class="airport-dot" cx="${a.x}" cy="${a.y}" r="4.1"></circle>
+            <text class="airport-label" x="${a.x + off[0]}" y="${a.y + off[1]}">${a.code}</text>`;
+        }).join("");
+
+        svg.innerHTML = states + routes + airports;
+      }
+
+      function setRoutes() {
+        one("#routes-cancel-table").innerHTML = routeCancelRows(5).map((r, i) => {
+          const origine = r.origine;
+          const destination = r.destination;
+          return `
+          <tr>
+            <td class="rank">${i + 1}</td>
+            <td><span class="route-name">${r.route}</span><span class="small-muted">${origine} vers ${destination}</span></td>
+            <td><strong>${fmt(r.annulations)}</strong><span class="small-muted">${fmt(r.vols)} vols</span></td>
+            <td><strong>${pct(r.taux, 1)}</strong><span class="small-muted">annulés</span></td>
+          </tr>
+        `;
+        }).join("");
+
+        one("#routes-risk-table").innerHTML = routeRiskRows(5).map((r, i) => `
+          <tr>
+            <td class="rank">${i + 1}</td>
+            <td><span class="route-name">${r.route}</span><span class="small-muted">${fmt(r.vols)} vols</span></td>
+            <td><strong>${pct(r.taux, 1)}</strong><span class="small-muted">annulés</span></td>
+            <td><strong>${fmt(r.annulations)}</strong><span class="small-muted">annul.</span></td>
+          </tr>
+        `).join("");
+      }
+
+      function setRouteInsights() {
+        const rows = routeRiskRows(10);
+        const top = rows[0];
+        const c = D.h3.concentration;
+        const annulations = rows.reduce((sum, r) => sum + r.annulations, 0);
+        const vols = rows.reduce((sum, r) => sum + r.vols, 0);
+        const tauxTop10 = annulations / vols * 100;
+        const items = [
+          ["Route la plus risquée", top.route, `${pct(top.taux, 1)} annulés - ${fmt(top.vols)} vols`],
+          ["Routes orange", fmt(annulations), `${fmt(vols)} vols - ${pct(tauxTop10, 1)} annulés`],
+          ["Routes prioritaires", pct(c.taux_annulation_prioritaires, 1), `contre ${pct(c.taux_annulation_autres, 1)} sur les autres routes`],
+          ["Concentration", `${fmt(c.routes_pour_50pct)} routes`, `50 % des annulations du réseau`]
+        ];
+        one("#route-insights").innerHTML = items.map(([k, v, note]) => `
+          <div class="route-insight">
+            <div class="insight-k">${k}</div>
+            <div class="insight-v">${v}</div>
+            <div class="insight-note">${note}</div>
+          </div>
+        `).join("");
+      }
+
+      function barSvg(container, rows, options = {}) {
+        const w = 760, h = options.height || 190;
+        const margin = { top: 10, right: 54, bottom: 24, left: 112 };
+        const max = options.max || Math.max(...rows.map(r => r.value)) * 1.15;
+        const band = (h - margin.top - margin.bottom) / rows.length;
+        const plotW = w - margin.left - margin.right;
+
+        const grid = [0, .25, .5, .75, 1].map(t => {
+          const x = margin.left + plotW * t;
+          return `<line class="grid" x1="${x}" x2="${x}" y1="${margin.top}" y2="${h - margin.bottom}"></line>
+                  <text class="tick" x="${x}" y="${h - 7}" text-anchor="middle">${pct(max * t, 0)}</text>`;
+        }).join("");
+
+        const bars = rows.map((r, i) => {
+          const y = margin.top + i * band + band * .2;
+          const bw = plotW * (r.value / max);
+          const color = r.color || varColor(i);
+          return `<text class="chart-label" x="${margin.left - 12}" y="${y + 19}" text-anchor="end">${r.label}</text>
+                  <rect x="${margin.left}" y="${y}" width="${bw}" height="${Math.max(18, band * .38)}" rx="3" fill="${color}"></rect>
+                  <text class="chart-label" x="${margin.left + bw + 10}" y="${y + 18}">${pct(r.value, 1)}</text>
+                  ${r.note ? `<text class="chart-note" x="${margin.left}" y="${y + Math.max(38, band * .72)}">${r.note}</text>` : ""}`;
+        }).join("");
+
+        container.innerHTML = `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${grid}${bars}</svg>`;
+      }
+
+      function lineSvg(container, rows) {
+        const w = 760, h = 190;
+        const margin = { top: 18, right: 26, bottom: 32, left: 46 };
+        const plotW = w - margin.left - margin.right;
+        const plotH = h - margin.top - margin.bottom;
+        const max = Math.ceil(Math.max(...rows.map(r => r.taux_retard)) / 5) * 5;
+        const months = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+        const x = i => margin.left + (plotW * i / (rows.length - 1));
+        const y = v => margin.top + plotH - (plotH * v / max);
+        const points = rows.map((r, i) => `${x(i)},${y(r.taux_retard)}`).join(" ");
+        const peakIndex = rows.reduce((best, r, i) => r.taux_retard > rows[best].taux_retard ? i : best, 0);
+
+        const grid = [0, .25, .5, .75, 1].map(t => {
+          const gy = margin.top + plotH * t;
+          const val = max * (1 - t);
+          return `<line class="grid" x1="${margin.left}" x2="${w - margin.right}" y1="${gy}" y2="${gy}"></line>
+                  <text class="tick" x="${margin.left - 12}" y="${gy + 4}" text-anchor="end">${pct(val, 0)}</text>`;
+        }).join("");
+
+        const labels = months.map((m, i) => `<text class="tick" x="${x(i)}" y="${h - 14}" text-anchor="middle">${m}</text>`).join("");
+        const dots = rows.map((r, i) => `<circle cx="${x(i)}" cy="${y(r.taux_retard)}" r="${i === peakIndex ? 6 : 3.2}" fill="${i === peakIndex ? "var(--coral)" : "var(--teal)"}"></circle>`).join("");
+        const peak = rows[peakIndex];
+
+        container.innerHTML = `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">
+          ${grid}
+          <polyline points="${points}" fill="none" stroke="var(--teal)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>
+          ${dots}${labels}
+          <text class="chart-label" x="${x(peakIndex) - 4}" y="${y(peak.taux_retard) - 13}" text-anchor="end">${months[peakIndex]} · ${pct(peak.taux_retard, 1)}</text>
+        </svg>`;
+      }
+
+      function varColor(i) {
+        return i === 0 ? "var(--coral)" : i === 1 ? "var(--teal)" : "var(--blue)";
+      }
+
+      function weeklyRows(daily) {
+        const buckets = new Map();
+        daily.forEach(r => {
+          const week = Math.floor((r.j - 1) / 7);
+          if (!buckets.has(week)) buckets.set(week, { week, start: r.j, end: r.j, sumRetard: 0, sumAnnulation: 0, count: 0 });
+          const b = buckets.get(week);
+          b.end = r.j;
+          b.sumRetard += Number(r.retard || 0);
+          b.sumAnnulation += Number(r.annulation || 0);
+          b.count += 1;
+        });
+        return [...buckets.values()].map(b => ({
+          week: b.week + 1,
+          start: b.start,
+          end: b.end,
+          day: (b.start + b.end) / 2,
+          retard: b.sumRetard / b.count,
+          annulation: b.sumAnnulation / b.count
+        }));
+      }
+
+      function weekSvg(container, daily) {
+        const rows = weeklyRows(daily);
+        const w = 560, h = 310;
+        const margin = { top: 28, right: 22, bottom: 38, left: 42 };
+        const plotW = w - margin.left - margin.right;
+        const plotH = h - margin.top - margin.bottom;
+        const max = Math.ceil(Math.max(...rows.map(r => Math.max(r.retard, r.annulation))) / 5) * 5;
+        const monthTicks = [
+          ["Jan", 1], ["Fév", 32], ["Mar", 60], ["Avr", 91], ["Mai", 121], ["Juin", 152],
+          ["Juil", 182], ["Août", 213], ["Sep", 244], ["Oct", 274], ["Nov", 305], ["Déc", 335]
+        ];
+        const xDay = j => margin.left + (plotW * (j - 1) / 364);
+        const y = v => margin.top + plotH - (plotH * v / max);
+        const retardPoints = rows.map(r => `${xDay(r.day)},${y(r.retard)}`).join(" ");
+        const annulationPoints = rows.map(r => `${xDay(r.day)},${y(r.annulation)}`).join(" ");
+        const peakIndex = rows.reduce((best, r, i) => r.retard > rows[best].retard ? i : best, 0);
+        const peakCancelIndex = rows.reduce((best, r, i) => r.annulation > rows[best].annulation ? i : best, 0);
+
+        const grid = [0, .25, .5, .75, 1].map(t => {
+          const gy = margin.top + plotH * t;
+          const val = max * (1 - t);
+          return `<line class="grid" x1="${margin.left}" x2="${w - margin.right}" y1="${gy}" y2="${gy}"></line>
+                  <text class="tick" x="${margin.left - 12}" y="${gy + 4}" text-anchor="end">${pct(val, 0)}</text>`;
+        }).join("");
+
+        const shades = (D.fenetres || []).map((f) => {
+          const x1 = xDay(Math.max(1, f.debut));
+          const x2 = xDay(Math.min(365, f.fin));
+          const label = shortPeriod(f.nom);
+          const textX = Math.max(margin.left + 18, Math.min(w - margin.right - 18, (x1 + x2) / 2));
+          const text = x2 - x1 > 28 ? `<text class="chart-note" x="${textX}" y="${margin.top + 15}" text-anchor="middle">${label}</text>` : "";
+          return `<rect x="${x1}" y="${margin.top}" width="${Math.max(3, x2 - x1)}" height="${plotH}" fill="var(--coral)" opacity=".10"></rect>${text}`;
+        }).join("");
+        const labels = monthTicks.map(([m, j]) => `<text class="tick" x="${xDay(j)}" y="${h - 14}" text-anchor="middle">${m}</text>`).join("");
+        const dots = rows.map((r, i) => `<circle cx="${xDay(r.day)}" cy="${y(r.retard)}" r="${i === peakIndex ? 6 : 2.4}" fill="${i === peakIndex ? "var(--coral)" : "var(--teal)"}"></circle>`).join("");
+        const peak = rows[peakIndex];
+        const peakCancel = rows[peakCancelIndex];
+        const legend = `
+          <rect x="${margin.left}" y="${margin.top - 20}" width="24" height="9" fill="var(--coral)" opacity=".16" rx="2"></rect>
+          <text class="chart-note" x="${margin.left + 30}" y="${margin.top - 12}">périodes de vacances</text>
+          <line x1="${w - 214}" x2="${w - 182}" y1="${margin.top + 12}" y2="${margin.top + 12}" stroke="var(--teal)" stroke-width="4" stroke-linecap="round"></line>
+          <text class="chart-note" x="${w - 176}" y="${margin.top + 16}">Retards</text>
+          <line x1="${w - 114}" x2="${w - 82}" y1="${margin.top + 12}" y2="${margin.top + 12}" stroke="var(--blue)" stroke-width="3" stroke-linecap="round"></line>
+          <text class="chart-note" x="${w - 76}" y="${margin.top + 16}">Annulations</text>`;
+
+        container.innerHTML = `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">
+          ${grid}${shades}
+          <polyline points="${annulationPoints}" fill="none" stroke="var(--blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+          <polyline points="${retardPoints}" fill="none" stroke="var(--teal)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>
+          <circle cx="${xDay(peakCancel.day)}" cy="${y(peakCancel.annulation)}" r="4.5" fill="var(--blue)"></circle>
+          ${dots}${labels}
+          ${legend}
+          <text class="chart-note" x="${Math.min(w - margin.right - 4, xDay(peakCancel.day) + 90)}" y="${y(peakCancel.annulation) - 10}" text-anchor="end">Annul. S${peakCancel.week} - ${pct(peakCancel.annulation, 1)}</text>
+        </svg>`;
+      }
+
+      function longhaulSvg(container, rows) {
+        const w = 760, h = 122;
+        const margin = { top: 12, right: 28, bottom: 36, left: 46 };
+        const plotW = w - margin.left - margin.right;
+        const plotH = h - margin.top - margin.bottom;
+        const max = 24;
+        const y = v => margin.top + plotH - (plotH * v / max);
+        const barW = 96;
+        const gap = 70;
+        const groupW = (barW * rows.length) + (gap * (rows.length - 1));
+        const startX = margin.left + (plotW - groupW) / 2;
+
+        const grid = [0, .25, .5, .75, 1].map(t => {
+          const gy = margin.top + plotH * t;
+          const val = max * (1 - t);
+          return `<line class="grid" x1="${margin.left}" x2="${w - margin.right}" y1="${gy}" y2="${gy}"></line>
+                  <text class="tick" x="${margin.left - 12}" y="${gy + 4}" text-anchor="end">${pct(val, 0)}</text>`;
+        }).join("");
+
+        const bars = rows.map((r, i) => {
+          const x = startX + i * (barW + gap);
+          const barH = h - margin.bottom - y(r.value);
+          const color = i === 0 ? "var(--coral)" : "var(--teal)";
+          const labelLines = r.label.split(" ");
+          return `<rect x="${x}" y="${y(r.value)}" width="${barW}" height="${barH}" rx="5" fill="${color}"></rect>
+                  <text class="chart-label" x="${x + barW / 2}" y="${y(r.value) - 10}" text-anchor="middle">${pct(r.value, 1)}</text>
+                  <text class="tick" x="${x + barW / 2}" y="${h - 44}" text-anchor="middle">${labelLines[0]}</text>
+                  <text class="tick" x="${x + barW / 2}" y="${h - 27}" text-anchor="middle">${labelLines.slice(1).join(" ")}</text>
+                  <text class="chart-note" x="${x + barW / 2}" y="${h - 10}" text-anchor="middle">${r.note}</text>`;
+        }).join("");
+
+        const distance = distanceDelayRates();
+        container.innerHTML = `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${grid}${bars}</svg>
+          <div class="sub">Seuil de separation : ${pct(D.h2.mediane_part, 1)} de vols longs dans l'activite de la compagnie.</div>
+          <div class="distance-compare">
+            <div class="distance-box">
+              <strong>${pct(distance.long.taux, 1)}</strong>
+              <span>Retards sur vols >= 1500 miles · ${fmt(distance.long.vols)} vols</span>
+            </div>
+            <div class="distance-box">
+              <strong>${pct(distance.short.taux, 1)}</strong>
+              <span>Retards sur vols < 1500 miles · ${fmt(distance.short.vols)} vols</span>
+            </div>
+          </div>`;
+      }
+
+      function distanceDelayRates() {
+        const totals = D.h2.tranches.reduce((acc, row) => {
+          const isLong = row.tranche.includes("1500") || row.tranche.includes(">=");
+          const key = isLong ? "long" : "short";
+          acc[key].vols += row.vols;
+          acc[key].retard += row.vols * row.taux_retard;
+          return acc;
+        }, { long: { vols: 0, retard: 0 }, short: { vols: 0, retard: 0 } });
+        totals.long.taux = totals.long.retard / totals.long.vols;
+        totals.short.taux = totals.short.retard / totals.short.vols;
+        return totals;
+      }
+
+      function indicatorRow(label, value, note, width, hot = false) {
+        return `
+          <div class="indicator-row">
+            <div class="indicator-top">
+              <div class="indicator-title">${label}</div>
+              <div class="indicator-value">${value}</div>
+            </div>
+            ${Number.isFinite(width) ? `<div class="mini-track"><div class="mini-fill" style="width:${Math.max(2, Math.min(100, width))}%"></div></div>` : ""}
+            <div class="indicator-note">${note}</div>
+          </div>
+        `;
+      }
+
+      function setHolidaySummary() {
+        const keep = new Set(["Nouvel an", "Noel / fin d'annee", "Vacances d'ete", "Hors vacances"]);
+        const rows = [...D.h1.detail]
+          .filter(r => keep.has(r.fenetre))
+          .sort((a, b) => b.taux_retard - a.taux_retard);
+        one("#holiday-summary").innerHTML = rows.map((r, i) => indicatorRow(
+          shortPeriod(r.fenetre),
+          pct(r.taux_retard, 1),
+          `${r.dates} - ${fmt(r.vols)} vols`,
+          r.taux_retard / 40 * 100
+        )).join("");
+      }
+
+      function setDelaySummary() {
+        const rows = D.h2.compagnies.slice(0, 6);
+        const w = 540, h = 285;
+        const margin = { top: 10, right: 96, bottom: 34, left: 138 };
+        const plotW = w - margin.left - margin.right;
+        const band = (h - margin.top - margin.bottom) / rows.length;
+        const maxLong = 45;
+        const barH = Math.max(18, band * .44);
+        const items = rows.map((c, i) => {
+          const y = margin.top + i * band + band * .16;
+          const bw = plotW * c.part_longs / maxLong;
+          return `
+            <text class="chart-label" x="${margin.left - 12}" y="${y + 15}" text-anchor="end">${c.code}</text>
+            <text class="chart-note" x="${margin.left - 12}" y="${y + 30}" text-anchor="end">${c.nom.replace(" Inc.", "")}</text>
+            <rect x="${margin.left}" y="${y}" width="${plotW}" height="${barH}" rx="4" fill="#e7eff1"></rect>
+            <rect x="${margin.left}" y="${y}" width="${bw}" height="${barH}" rx="4" fill="var(--teal)"></rect>
+            <text class="chart-label" x="${margin.left + bw + 8}" y="${y + 15}">${pct(c.part_longs, 1)}</text>
+            <text class="chart-label" x="${w - 4}" y="${y + 15}" text-anchor="end">${pct(c.taux_retard, 1)}</text>
+            <text class="chart-note" x="${w - 4}" y="${y + 30}" text-anchor="end">retards</text>
+          `;
+        }).join("");
+        const ticks = [0, 15, 30, 45].map(v => {
+          const x = margin.left + plotW * v / maxLong;
+          return `<line class="grid" x1="${x}" x2="${x}" y1="${margin.top}" y2="${h - margin.bottom}"></line>
+            <text class="tick" x="${x}" y="${h - 9}" text-anchor="middle">${v}%</text>`;
+        }).join("");
+        one("#delay-summary").innerHTML = `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">
+          ${ticks}
+          ${items}
+          <text class="chart-note" x="${margin.left}" y="${h - 1}">Barre turquoise = part de vols long-courrier. Chiffre à droite = taux de retard.</text>
+        </svg>`;
+      }
+
+      function setCompanyReference() {
+        const rows = D.h2.compagnies;
+        const w = 540, h = 285;
+        const margin = { top: 18, right: 18, bottom: 38, left: 44 };
+        const plotW = w - margin.left - margin.right;
+        const plotH = h - margin.top - margin.bottom;
+        const maxX = 45, maxY = 32;
+        const x = v => margin.left + plotW * v / maxX;
+        const y = v => margin.top + plotH - plotH * v / maxY;
+        const globalY = y(D.kpi.taux_retard_pct);
+        const medianX = x(D.h2.mediane_part);
+        const grid = [0, 10, 20, 30, 40].map(v => {
+          const gx = x(v);
+          return `<line class="grid" x1="${gx}" x2="${gx}" y1="${margin.top}" y2="${h - margin.bottom}"></line>
+            <text class="tick" x="${gx}" y="${h - 12}" text-anchor="middle">${v}%</text>`;
+        }).join("") + [10, 20, 30].map(v => {
+          const gy = y(v);
+          return `<line class="grid" x1="${margin.left}" x2="${w - margin.right}" y1="${gy}" y2="${gy}"></line>
+            <text class="tick" x="${margin.left - 10}" y="${gy + 4}" text-anchor="end">${v}%</text>`;
+        }).join("");
+        const points = rows.map(c => {
+          const r = Math.max(4, Math.min(12, Math.sqrt(c.vols) / 85));
+          const hot = c.taux_retard >= D.kpi.taux_retard_pct;
+          const label = ["VX", "UA", "AS", "B6", "NK", "F9", "WN"].includes(c.code);
+          const lx = x(c.part_longs) + (c.code === "VX" ? -18 : 10);
+          const anchor = c.code === "VX" ? "end" : "start";
+          return `
+            <circle cx="${x(c.part_longs)}" cy="${y(c.taux_retard)}" r="${r}" fill="${hot ? "var(--coral)" : "var(--teal)"}" opacity=".82"></circle>
+            ${label ? `<text class="chart-label" x="${lx}" y="${y(c.taux_retard) - 8}" text-anchor="${anchor}">${c.code}</text>` : ""}
+          `;
+        }).join("");
+        one("#company-reference").innerHTML = `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">
+          ${grid}
+          <line x1="${medianX}" x2="${medianX}" y1="${margin.top}" y2="${h - margin.bottom}" stroke="#8fa1aa" stroke-width="2" opacity=".55"></line>
+          <line x1="${margin.left}" x2="${w - margin.right}" y1="${globalY}" y2="${globalY}" stroke="#8fa1aa" stroke-width="2" opacity=".65"></line>
+          ${points}
+          <circle cx="${margin.left + 6}" cy="${margin.top - 6}" r="5" fill="var(--coral)"></circle>
+          <text class="chart-note" x="${margin.left + 16}" y="${margin.top - 2}">retard au-dessus de la moyenne</text>
+          <circle cx="${margin.left + 166}" cy="${margin.top - 6}" r="5" fill="var(--teal)"></circle>
+          <text class="chart-note" x="${margin.left + 176}" y="${margin.top - 2}">retard sous la moyenne</text>
+          <text class="chart-note" x="${medianX + 5}" y="${margin.top + 12}">seuil long-courrier</text>
+          <text class="chart-note" x="${w - margin.right}" y="${globalY - 6}" text-anchor="end">moyenne retard ${pct(D.kpi.taux_retard_pct, 1)}</text>
+          <text class="chart-note" x="${margin.left + plotW / 2}" y="${h - 1}" text-anchor="middle">Part de vols long-courrier (% de vols ≥ 1500 miles)</text>
+          <text class="chart-note" transform="translate(9 ${margin.top + plotH / 2}) rotate(-90)" text-anchor="middle">Taux de retard (%)</text>
+        </svg>`;
+      }
+
+      function setCharts() {
+        weekSvg(one("#week-chart"), D.journalier);
+        setHolidaySummary();
+        setCompanyReference();
+        setDelaySummary();
+        return;
+
+        const h1Rows = [...D.h1.detail]
+          .sort((a, b) => b.taux_retard - a.taux_retard)
+          .map((r, i) => ({
+            label: shortPeriod(r.fenetre),
+            value: r.taux_retard,
+            note: `${fmt(r.vols)} vols`,
+            color: i === 0 ? "var(--coral)" : r.fenetre === "Hors vacances" ? "#92a5ad" : "var(--teal)"
+          }));
+        barSvg(one("#holiday-chart"), h1Rows, { max: 40, height: 190 });
+        weekSvg(one("#week-chart"), D.journalier);
+
+        const rows = [
+          { label: "Beaucoup de vols longs", value: D.h2.taux_part_forte, note: "au-dessus mediane" },
+          { label: "Peu de vols longs", value: D.h2.taux_part_faible, note: "sous mediane" }
+        ];
+        longhaulSvg(one("#longhaul-bars"), rows);
+
+        one("#companies").innerHTML = D.h2.compagnies.slice(0, 4).map(c => `
+          <div class="company-row">
+            <div class="company-name">${c.nom || c.compagnie || c.code}<span class="small-muted">${c.code} · ${fmt(c.vols)} vols analyses</span></div>
+            <div class="metric">${pct(c.part_longs, 1)}<span>vols longs</span></div>
+            <div class="metric">${pct(c.taux_retard, 1)}<span>retards</span></div>
+          </div>
+        `).join("");
+      }
+
+      setKpis();
+      drawMap();
+      setRoutes();
+      setRouteInsights();
+      setCharts();
+    })();
+  </script>
+</body>
+</html>
