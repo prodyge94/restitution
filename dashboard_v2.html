@@ -802,6 +802,7 @@
             <div class="map-legend">
               <span><span class="swatch" style="background: var(--coral)"></span>plus fort taux d'annulation</span>
               <span><span class="swatch" style="background: var(--teal); opacity: .6"></span>plus grand nombre d'annulations</span>
+              <span style="margin-left: auto">année 2015 hors octobre (codes aéroports inexploitables)</span>
             </div>
           </div>
         </div>
@@ -814,8 +815,8 @@
       <article class="panel">
         <div class="panel-title">
           <div>
-            <h2>Top annulations</h2>
-            <p class="hint">Routes avec le plus grand nombre d'annulations.</p>
+            <h2>Les routes les plus annulées</h2>
+            <p class="hint">Celles qui cumulent le plus d'annulations dans l'année (hors octobre).</p>
           </div>
         </div>
         <table class="route-table compact" aria-label="Top annulations">
@@ -829,8 +830,8 @@
       <article class="panel">
         <div class="panel-title">
           <div>
-            <h2>Top taux d'annulation</h2>
-            <p class="hint">Routes à fort risque avec au moins 900 vols.</p>
+            <h2>Les routes les plus risquées</h2>
+            <p class="hint">Celles où la part de vols annulés est la plus forte — au moins un vol par jour (hors octobre).</p>
           </div>
         </div>
         <table class="route-table compact" aria-label="Top taux annulation">
@@ -859,15 +860,13 @@
         return String(name)
           .replace("Noël / fin d'année", "Noël")
           .replace("Vacances d'été", "Été")
-          .replace("Hors vacances", "Hors vac.")
           .replace("Nouvel an", "Nouvel an");
       }
 
       function routeRiskRows(limit = 10) {
-        return D.carte.routes
-          .filter(r => r.vols >= 900)
-          .sort((a, b) => (b.taux - a.taux) || (b.annulations - a.annulations))
-          .slice(0, limit);
+        // classement calculé par le notebook : routes au plus fort taux d'annulation,
+        // avec au moins un vol par jour en moyenne (365 vols sur l'année)
+        return D.h3.routes_risquees.slice(0, limit);
       }
 
       function routeCancelRows(limit = 10) {
@@ -891,8 +890,8 @@
 
       function setKpis() {
         const items = [
-          ["Vols analysés", "5,82 M", `${D.kpi.compagnies} compagnies aériennes`],
-          ["Vols en retard", pct(D.kpi.taux_retard_pct), "Retard supérieur à 15 minutes"],
+          ["Vols analysés", `${(D.kpi.vols_programmes / 1e6).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} M`, `${D.kpi.compagnies} compagnies aériennes`],
+          ["Vols en retard", pct(D.kpi.taux_retard_pct), "Retard ≥ 15 minutes"],
           ["Vols annulés", pct(D.kpi.taux_annulation_pct), `${fmt(D.kpi.vols_annules)} annulations`],
           ["Routes concentrées", pct(D.h3.concentration.pct_routes_pour_50pct), "des routes = 50 % des annulations"]
         ];
@@ -910,7 +909,7 @@
         const c = D.carte;
         const svg = one("#map");
         svg.setAttribute("viewBox", "55 72 750 352");
-        const riskRows = routeRiskRows(10);
+        const riskRows = mapRowsFor(routeRiskRows(10));
         const cancelRows = mapRowsFor(routeCancelRows(10));
         const riskSet = new Set(riskRows.map(r => r.route));
         const cancelSet = new Set(cancelRows.map(r => r.route));
@@ -950,7 +949,7 @@
           return `
           <tr>
             <td class="rank">${i + 1}</td>
-            <td><span class="route-name">${r.route}</span><span class="small-muted">${origine} vers ${destination}</span></td>
+            <td><span class="route-name">${r.route.replace(" -> ", " → ")}</span><span class="small-muted">${origine} vers ${destination}</span></td>
             <td><strong>${fmt(r.annulations)}</strong><span class="small-muted">${fmt(r.vols)} vols</span></td>
             <td><strong>${pct(r.taux, 1)}</strong><span class="small-muted">annulés</span></td>
           </tr>
@@ -960,7 +959,7 @@
         one("#routes-risk-table").innerHTML = routeRiskRows(5).map((r, i) => `
           <tr>
             <td class="rank">${i + 1}</td>
-            <td><span class="route-name">${r.route}</span><span class="small-muted">${fmt(r.vols)} vols</span></td>
+            <td><span class="route-name">${r.route.replace(" -> ", " → ")}</span><span class="small-muted">${fmt(r.vols)} vols</span></td>
             <td><strong>${pct(r.taux, 1)}</strong><span class="small-muted">annulés</span></td>
             <td><strong>${fmt(r.annulations)}</strong><span class="small-muted">annul.</span></td>
           </tr>
@@ -974,11 +973,12 @@
         const annulations = rows.reduce((sum, r) => sum + r.annulations, 0);
         const vols = rows.reduce((sum, r) => sum + r.vols, 0);
         const tauxTop10 = annulations / vols * 100;
+        const surrisque = String(Math.round(c.surrisque * 10) / 10).replace(".", ",");
         const items = [
-          ["Route la plus risquée", top.route, `${pct(top.taux, 1)} annulés - ${fmt(top.vols)} vols`],
-          ["Routes orange", fmt(annulations), `${fmt(vols)} vols - ${pct(tauxTop10, 1)} annulés`],
-          ["Routes prioritaires", pct(c.taux_annulation_prioritaires, 1), `contre ${pct(c.taux_annulation_autres, 1)} sur les autres routes`],
-          ["Concentration", `${fmt(c.routes_pour_50pct)} routes`, `50 % des annulations du réseau`]
+          ["Route la plus risquée", top.route.replace(" -> ", " → "), `${pct(top.taux, 1)} annulés - ${fmt(top.vols)} vols`],
+          [`Les ${rows.length} routes en orange`, `${fmt(annulations)} annulations`, `${fmt(vols)} vols - ${pct(tauxTop10, 1)} annulés`],
+          [`Les ${fmt(c.routes_pour_50pct)} routes sensibles`, `${surrisque}× plus annulées`, `${pct(c.taux_annulation_prioritaires, 1)} contre ${pct(c.taux_annulation_autres, 1)} sur le reste du réseau`],
+          ["L'effet hiver", pct(D.h3.part_hiver, 1), `de leurs annulations en janvier-mars`]
         ];
         one("#route-insights").innerHTML = items.map(([k, v, note]) => `
           <div class="route-insight">
@@ -1111,10 +1111,10 @@
         const legend = `
           <rect x="${margin.left}" y="${margin.top - 20}" width="24" height="9" fill="var(--coral)" opacity=".16" rx="2"></rect>
           <text class="chart-note" x="${margin.left + 30}" y="${margin.top - 12}">périodes de vacances</text>
-          <line x1="${w - 214}" x2="${w - 182}" y1="${margin.top - 16}" y2="${margin.top - 16}" stroke="var(--teal)" stroke-width="4" stroke-linecap="round"></line>
-          <text class="chart-note" x="${w - 176}" y="${margin.top - 12}">Retards</text>
-          <line x1="${w - 114}" x2="${w - 82}" y1="${margin.top - 16}" y2="${margin.top - 16}" stroke="var(--blue)" stroke-width="3" stroke-linecap="round"></line>
-          <text class="chart-note" x="${w - 76}" y="${margin.top - 12}">Annulations</text>`;
+          <line x1="${w - 285}" x2="${w - 253}" y1="${margin.top - 16}" y2="${margin.top - 16}" stroke="var(--teal)" stroke-width="4" stroke-linecap="round"></line>
+          <text class="chart-note" x="${w - 247}" y="${margin.top - 12}">% de vols en retard</text>
+          <line x1="${w - 136}" x2="${w - 104}" y1="${margin.top - 16}" y2="${margin.top - 16}" stroke="var(--blue)" stroke-width="3" stroke-linecap="round"></line>
+          <text class="chart-note" x="${w - 98}" y="${margin.top - 12}">% de vols annulés</text>`;
 
         container.innerHTML = `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">
           ${grid}${shades}
@@ -1123,7 +1123,8 @@
           <circle cx="${xDay(peakCancel.day)}" cy="${y(peakCancel.annulation)}" r="4.5" fill="var(--blue)"></circle>
           ${dots}${labels}
           ${legend}
-          <text class="chart-note" x="${Math.min(w - margin.right - 4, xDay(peakCancel.day) + 90)}" y="${y(peakCancel.annulation) - 10}" text-anchor="end">Annul. S${peakCancel.week} - ${pct(peakCancel.annulation, 1)}</text>
+          <text class="chart-note" x="${Math.min(w - margin.right - 4, xDay(peakCancel.day) + 90)}" y="${y(peakCancel.annulation) - 10}" text-anchor="end">pic : ${pct(peakCancel.annulation, 1)} de vols annulés</text>
+          <text class="chart-note" x="${xDay(peak.day) + 12}" y="${y(peak.retard) + 4}">pic : ${pct(peak.retard, 1)} de vols en retard</text>
         </svg>`;
       }
 
@@ -1207,7 +1208,7 @@
         one("#holiday-summary").innerHTML = rows.map((r, i) => indicatorRow(
           shortPeriod(r.fenetre),
           pct(r.taux_retard, 1),
-          `${r.dates} - ${fmt(r.vols)} vols`,
+          `${String(r.dates).replace(" -> ", " → ")} - ${fmt(r.vols)} vols`,
           r.taux_retard / 40 * 100
         )).join("");
       }
@@ -1254,15 +1255,18 @@
           return `<line class="grid" x1="${margin.left}" x2="${w - margin.right}" y1="${gy}" y2="${gy}"></line>
             <text class="tick" x="${margin.left - 10}" y="${gy + 4}" text-anchor="end">${v}%</text>`;
         }).join("");
+        // decalage d'etiquette par compagnie : [dx, dy, ancrage], regle pour eviter les collisions
+        const OFFSETS = {
+          VX: [-18, -8, "end"], EV: [12, -2, "start"], MQ: [12, -6, "start"], OO: [12, 16, "start"],
+          DL: [13, -10, "start"], HA: [11, -8, "start"], AA: [13, 19, "start"], US: [10, -10, "start"],
+        };
         const points = rows.map(c => {
           const r = Math.max(4, Math.min(12, Math.sqrt(c.vols) / 85));
           const hot = c.taux_retard >= D.kpi.taux_retard_pct;
-          const label = ["VX", "UA", "AS", "B6", "NK", "F9", "WN"].includes(c.code);
-          const lx = x(c.part_longs) + (c.code === "VX" ? -18 : 10);
-          const anchor = c.code === "VX" ? "end" : "start";
+          const [dx, dy, anchor] = OFFSETS[c.code] || [10, -8, "start"];
           return `
             <circle cx="${x(c.part_longs)}" cy="${y(c.taux_retard)}" r="${r}" fill="${hot ? "var(--coral)" : "var(--teal)"}" opacity=".82"></circle>
-            ${label ? `<text class="chart-label" x="${lx}" y="${y(c.taux_retard) - 8}" text-anchor="${anchor}">${c.code}</text>` : ""}
+            <text class="chart-label" x="${x(c.part_longs) + dx}" y="${y(c.taux_retard) + dy}" text-anchor="${anchor}">${c.code}</text>
           `;
         }).join("");
         one("#company-reference").innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMax meet" aria-hidden="true">

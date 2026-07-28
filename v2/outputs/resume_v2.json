@@ -1,5 +1,5 @@
 {
-  "genere_le": "2026-07-28 16:32",
+  "genere_le": "2026-07-28 17:49",
   "source": "Kaggle / US DOT - 2015 Flight Delays and Cancellations (vols domestiques US)",
   "perimetre": "Année 2015 complète, 12 mois (H3 : 11 mois, cf. codes aéroport d'octobre)",
   "definitions": {
@@ -171,5 +171,5 @@
       "taux_pct": 6.24
     }
   },
-  "duree_execution_sec": 102.3
+  "duree_execution_sec": 95.6
 }
