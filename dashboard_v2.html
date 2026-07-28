@@ -857,8 +857,8 @@
 
       function shortPeriod(name) {
         return String(name)
-          .replace("Noel / fin d'annee", "Noël")
-          .replace("Vacances d'ete", "Été")
+          .replace("Noël / fin d'année", "Noël")
+          .replace("Vacances d'été", "Été")
           .replace("Hors vacances", "Hors vac.")
           .replace("Nouvel an", "Nouvel an");
       }
@@ -1200,7 +1200,7 @@
       }
 
       function setHolidaySummary() {
-        const keep = new Set(["Nouvel an", "Noel / fin d'annee", "Vacances d'ete", "Hors vacances"]);
+        const keep = new Set(["Nouvel an", "Noël / fin d'année", "Vacances d'été", "Hors vacances"]);
         const rows = [...D.h1.detail]
           .filter(r => keep.has(r.fenetre))
           .sort((a, b) => b.taux_retard - a.taux_retard);

@@ -1,17 +1,17 @@
 {
-  "genere_le": "2026-07-28 14:57",
+  "genere_le": "2026-07-28 16:32",
   "source": "Kaggle / US DOT - 2015 Flight Delays and Cancellations (vols domestiques US)",
-  "perimetre": "Annee 2015 complete, 12 mois (H3 : 11 mois, cf. codes aeroport d'octobre)",
+  "perimetre": "Année 2015 complète, 12 mois (H3 : 11 mois, cf. codes aéroport d'octobre)",
   "definitions": {
-    "retard": "arrivee avec >= 15 min de retard, hors vols annules et deroutes",
+    "retard": "arrivée avec >= 15 min de retard, hors vols annulés et déroutés",
     "vol_long": "distance >= 1500 miles (long-courrier domestique)",
     "vacances": {
-      "Vacances d'ete": "juin -> aout",
+      "Vacances d'été": "juin -> août",
       "Nouvel an": "1 -> 5 janvier",
       "Thanksgiving": "20 -> 30 novembre",
-      "Noel / fin d'annee": "18 -> 31 decembre"
+      "Noël / fin d'année": "18 -> 31 décembre"
     },
-    "route": "couple oriente ORIGINE -> DESTINATION en codes IATA"
+    "route": "couple orienté ORIGINE -> DESTINATION en codes IATA"
   },
   "panorama": {
     "vols_programmes": 5819079,
@@ -27,8 +27,8 @@
     "retard_median_min": -5.0
   },
   "H1": {
-    "statut": "Confirmee, mais a preciser",
-    "resume": "L'ecart brut est de +5.03 points (21.91 % contre 16.89 %), mais cet agregat est domine a 77 % par l'ete et masque des comportements opposes. Une fois chaque fenetre comparee a une reference comparable, l'effet le plus fort est Nouvel an (+18.25 points vs reste du meme mois), l'ete ne pese que +4.12 points, et Thanksgiving est negatif (-0.82 point). Ce ne sont donc pas 'les vacances' qui creent du retard, mais les pics courts de fin d'annee.",
+    "statut": "Confirmée, mais à préciser",
+    "resume": "L'écart brut est de +5.03 points (21.91 % contre 16.89 %), mais cet agrégat est dominé à 77 % par l'été et masque des comportements opposés. Une fois chaque fenêtre comparée à une référence comparable, l'effet le plus fort est Nouvel an (+18.25 points vs reste du même mois), l'été ne pèse que +4.12 points, et Thanksgiving est negatif (-0.82 point). Ce ne sont donc pas 'les vacances' qui créent du retard, mais les pics courts de fin d'année.",
     "taux_vacances_pct": 21.91,
     "taux_hors_vacances_pct": 16.89,
     "ecart_brut_points": 5.03,
@@ -44,8 +44,8 @@
     "effet_net_par_fenetre": [
       {
         "fenetre": "Nouvel an",
-        "nature": "effet fenetre",
-        "reference": "reste du meme mois",
+        "nature": "effet fenêtre",
+        "reference": "reste du même mois",
         "vols": 76931,
         "taux_fenetre": 36.171,
         "taux_reference": 17.924,
@@ -55,9 +55,9 @@
         "p_value": 0.0
       },
       {
-        "fenetre": "Noel / fin d'annee",
-        "nature": "effet fenetre",
-        "reference": "reste du meme mois",
+        "fenetre": "Noël / fin d'année",
+        "nature": "effet fenêtre",
+        "reference": "reste du même mois",
         "vols": 209038,
         "taux_fenetre": 28.817,
         "taux_reference": 14.015,
@@ -67,9 +67,9 @@
         "p_value": 0.0
       },
       {
-        "fenetre": "Vacances d'ete",
+        "fenetre": "Vacances d'été",
         "nature": "effet saisonnier",
-        "reference": "reste de l'annee hors fetes",
+        "reference": "reste de l'année hors fêtes",
         "vols": 1511187,
         "taux_fenetre": 21.009,
         "taux_reference": 16.887,
@@ -80,8 +80,8 @@
       },
       {
         "fenetre": "Thanksgiving",
-        "nature": "effet fenetre",
-        "reference": "reste du meme mois",
+        "nature": "effet fenêtre",
+        "reference": "reste du même mois",
         "vols": 163760,
         "taux_fenetre": 14.731,
         "taux_reference": 15.555,
@@ -93,8 +93,8 @@
     ]
   },
   "H2": {
-    "statut": "Refutee",
-    "resume": "Les vols longs (>= 1500 miles) ne composent pas la majorite des retards : ils portent 13.5 % des vols en retard et 13.1 % des minutes de retard, pour 13.6 % des vols effectues. Leur part des retards est donc exactement leur part du trafic : le taux de retard varie a peine avec la distance (18.4 % au-dela de 2000 miles contre 18.2 % en dessous de 500), et les vols les plus longs rattrapent en moyenne 8.9 minutes en vol. La contre-analyse par compagnie ecarte aussi la version indirecte de l'hypothese : sur les 14 compagnies, la correlation entre part de vols longs et taux de retard est de -0.179 (Pearson, p = 0.54), non significative et de signe contraire a l'hypothese.",
+    "statut": "Réfutée",
+    "resume": "Les vols longs (>= 1500 miles) ne composent pas la majorité des retards : ils portent 13.5 % des vols en retard et 13.1 % des minutes de retard, pour 13.6 % des vols effectués. Leur part des retards est donc exactement leur part du trafic : le taux de retard varie à peine avec la distance (18.4 % au-delà de 2000 miles contre 18.2 % en dessous de 500), et les vols les plus longs rattrapent en moyenne 8.9 minutes en vol. La contre-analyse par compagnie écarte aussi la version indirecte de l'hypothèse : sur les 14 compagnies, la corrélation entre part de vols longs et taux de retard est de -0.179 (Pearson, p = 0.54), non significative et de signe contraire à l'hypothèse.",
     "composition": {
       "part_trafic_pct": 13.63,
       "part_vols_retard_pct": 13.46,
@@ -144,8 +144,8 @@
     "mediane_part_vols_longs_pct": 18.16
   },
   "H3": {
-    "statut": "Confirmee, avec une reserve importante",
-    "resume": "455 routes sur 4 693 (9.70 %) portent la moitie des 87 430 annulations du perimetre, et le Gini des annulations (0.683) depasse celui du trafic (0.558). La concentration est donc reelle, mais elle est pour une bonne part mecanique : les 10 % de routes en tete portent 50.9 % des annulations et deja 38.7 % des vols. Le resultat solide est le sur-risque a volume comparable : 2.92 % d'annulation sur les routes prioritaires contre 1.14 % ailleurs, soit x2.56. Ces routes sont majoritairement des navettes courtes du Nord-Est, et 52 % de leurs annulations tombent au premier trimestre.",
+    "statut": "Confirmée, avec une réserve importante",
+    "resume": "455 routes sur 4 693 (9.70 %) portent la moitié des 87 430 annulations du périmètre, et le Gini des annulations (0.683) dépasse celui du trafic (0.558). La concentration est donc réelle, mais elle est pour une bonne part mécanique : les 10 % de routes en tête portent 50.9 % des annulations et déjà 38.7 % des vols. Le résultat solide est le sur-risque à volume comparable : 2.92 % d'annulation sur les routes prioritaires contre 1.14 % ailleurs, soit x2.56. Ces routes sont majoritairement des navettes courtes du Nord-Est, et 52 % de leurs annulations tombent au premier trimestre.",
     "concentration": {
       "routes": 4693,
       "annulations": 87430,
@@ -171,5 +171,5 @@
       "taux_pct": 6.24
     }
   },
-  "duree_execution_sec": 111.5
+  "duree_execution_sec": 102.3
 }
