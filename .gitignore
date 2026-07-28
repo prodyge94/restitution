@@ -2,3 +2,4 @@
 .vscode/
 tmp
 data/
+.ipynb_checkpoints/
