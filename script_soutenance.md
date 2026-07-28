@@ -10,12 +10,12 @@ Chacun pilote l'écran pendant son passage. Tous les chiffres ci-dessous sont ex
 
 | Séquence | Qui | Durée |
 |---|---|---|
-| Slides 1-3 : titre, dataset, traitements | A | 4 min |
+| Slides 1-3 : titre, dataset, traitements | A | 5 min |
 | Slide 4 : les 3 hypothèses | B, C, D | 1 min |
 | Slide 5 + démo du dashboard en direct | B → C → D | 5 min |
 | Slides 6-7 : conclusion, références | D | 2 min |
 | Notebook : sections 1-5 → 6 → 7 → 8-12 | A → B → C → D | 13 min |
-| Marge pour les questions | tous | 5 min |
+| Marge pour les questions | tous | 4 min |
 
 **Avant de commencer** : dashboard.html ouvert dans un onglet (double-clic, pas besoin de serveur), notebook ouvert et déjà exécuté, PPT en mode présentation. Vérifier le vidéoprojecteur avec le dashboard : si les couleurs passent mal, augmenter la luminosité.
 
@@ -27,18 +27,44 @@ Chacun pilote l'écran pendant son passage. Tous les chiffres ci-dessous sont ex
 
 « Bonjour. Nous allons vous présenter notre projet de reporting sur les retards et annulations des vols intérieurs américains en 2015. Notre question de départ : quand, qui et où — quand les retards frappent-ils, quelles compagnies sont touchées, et où se concentrent les annulations. Je commence par les données et leur préparation, puis chacun présentera l'hypothèse qu'il a instruite, nous vous ferons visiter le dashboard, et nous terminerons par les conclusions avant de vous montrer le notebook. »
 
-### A — Slide 2 (dataset) — 2 min
+### A — Slide 2 (dataset) — 2 min à 2 min 30
 
-- « Le dataset vient de Kaggle, publié par le ministère américain des transports : **5 819 079 vols**, tous les vols intérieurs américains de 2015, en **31 colonnes**. »
-- « Trois fichiers croisés par le code IATA : le fichier des vols (592 Mo), l'annuaire des 14 compagnies, et les 322 aéroports avec leurs coordonnées — c'est ce qui nous permet la carte du dashboard. »
-- Montrer l'extrait réel : « chaque ligne est un vol programmé. Vous voyez ici quatre vols réels : un Southwest à l'heure, un Spirit arrivé avec 85 minutes de retard, un JetBlue Boston→Chicago annulé pour météo en février, et un Delta New York→Los Angeles de 2 475 miles arrivé en avance. Retenez ces quatre-là : ils annoncent déjà toute la suite. »
-- Balayer les colonnes clés : « ARRIVAL_DELAY, le retard à l'arrivée en minutes — négatif signifie en avance ; CANCELLED et son motif ; DISTANCE qui nous servira à définir les vols longs. »
+**La source et le choix (~30 s).** « Le dataset s'appelle *2015 Flight Delays and Cancellations*. Il est distribué sur Kaggle mais publié à l'origine par le Département américain des Transports, le régulateur fédéral — c'est une source officielle. Nous l'avons choisi, et fait valider, parce qu'il coche trois cases : il est massif — 5 819 079 vols, l'intégralité du trafic intérieur américain de 2015 —, il est riche — 31 colonnes par vol —, et il permet d'interroger le phénomène sous nos trois angles : le temps, les compagnies, le réseau. »
 
-### A — Slide 3 (traitements) — 2 min
+**Les trois fichiers (~20 s).** « Il est livré en trois fichiers qui se joignent par le code IATA, le code à trois lettres de l'aviation civile. Le fichier des vols : 592 Mo, une ligne par vol programmé. L'annuaire des compagnies : 14 lignes, le code et le nom commercial — WN c'est Southwest, DL c'est Delta. Et les aéroports : 322 lignes avec code, nom, ville, État et coordonnées GPS — ce sont ces coordonnées qui nous permettront la carte du dashboard. »
 
-- « Trois étapes de traitement. D'abord **nettoyer** : l'audit a révélé 105 071 retards manquants. Ce n'est pas du bruit : ce sont exactement les 89 884 vols annulés plus les 15 187 déroutés — un vol annulé n'a pas de retard d'arrivée. Si on ne les exclut pas, ils sont comptés comme des vols à l'heure. Deuxième découverte : en octobre, les aéroports sont codés avec un autre référentiel, inexploitable — nous avons écarté ce mois uniquement pour l'analyse des routes, il ne porte que 2,7 % des annulations. »
-- « Ensuite **construire** : un vol est en retard à partir de 15 minutes à l'arrivée — c'est la norme officielle du régulateur américain, pas notre choix ; un vol long fait 1 500 miles ou plus ; nous avons construit les fenêtres de vacances 2015 et les routes origine→destination. »
-- « Enfin **analyser** : agrégations par jour, compagnie et route ; et surtout des comparaisons contrôlées — chaque résultat est confronté à une référence comparable et testé sur d'autres seuils. Tout est reproductible : le notebook regénère l'intégralité — tableaux, graphiques et dashboard — en moins de deux minutes. »
+**L'extrait réel (~30 s).** « Chaque ligne est un vol programmé. Vous en voyez quatre vrais : un Southwest Atlanta→Chicago arrivé 4 minutes en avance ; un Spirit Chicago→New York arrivé avec 85 minutes de retard ; un JetBlue Boston→Chicago annulé — motif B, la météo, un 2 février ; et un Delta New York→Los Angeles, 2 475 miles, arrivé 10 minutes en avance. Retenez ces quatre-là : le low-cost en retard, l'annulation météo du Nord-Est en hiver, le très long vol ponctuel — ils annoncent déjà nos trois hypothèses. »
+
+**Les colonnes clés, une par une (~40 s à l'oral, le reste en réserve pour les questions).**
+- `YEAR / MONTH / DAY` : « la date du vol en trois colonnes — nous les recomposons en vraie date. »
+- `AIRLINE` : « le code IATA de la compagnie qui opère le vol, 14 valeurs distinctes. »
+- `ORIGIN_AIRPORT / DESTINATION_AIRPORT` : « les aéroports de départ et d'arrivée, en code IATA — LAX, JFK... C'est sur ces colonnes que nous découvrirons l'anomalie d'octobre, j'y reviens. »
+- `SCHEDULED_DEPARTURE` : « l'heure de départ prévue, au format hhmm — 1730 se lit 17 h 30. »
+- `DISTANCE` : « la distance du vol en miles — un mile vaut 1,6 km ; les 2 475 miles du New York–Los Angeles font environ 4 000 km. C'est elle qui définira le vol long. »
+- `DEPARTURE_DELAY / ARRIVAL_DELAY` : « les minutes de retard au départ et à l'arrivée — négatif signifie en avance. Toute notre analyse des retards repose sur l'arrivée : c'est ce que vit le passager. L'écart entre les deux mesure ce que le vol rattrape en l'air — il servira dans H2. »
+- `CANCELLED` et `CANCELLATION_REASON` : « vol annulé oui/non, et le motif en un code : A la compagnie, B la météo, C le contrôle aérien, D la sûreté. »
+- `DIVERTED` : « vol dérouté vers un autre aéroport que prévu — rare, 15 187 cas. »
+- `AIR_SYSTEM / SECURITY / AIRLINE / LATE_AIRCRAFT / WEATHER_DELAY` : « cinq colonnes qui ne sont renseignées que pour les vols en retard d'au moins 15 minutes : elles ventilent les minutes de retard par responsabilité — le contrôle aérien, la sûreté, la compagnie, l'avion précédent arrivé en retard, la météo. »
+
+**Si le prof demande les colonnes restantes** (non montrées sur la slide) : `FLIGHT_NUMBER` le numéro de vol, `TAIL_NUMBER` l'immatriculation de l'appareil, `TAXI_OUT / TAXI_IN` les minutes de roulage au sol, `WHEELS_OFF / WHEELS_ON` les heures réelles de décollage et d'atterrissage, `SCHEDULED_TIME / ELAPSED_TIME / AIR_TIME` les durées prévue, réelle et en vol, `SCHEDULED_ARRIVAL / ARRIVAL_TIME / DEPARTURE_TIME` les horaires prévus et réels. « Nous ne chargeons que 19 colonnes sur 31 : le détail opérationnel du roulage et des heures réelles ne sert aucune de nos hypothèses, et l'écarter allège d'autant la mémoire. »
+
+**Les fichiers annexes (~10 s).** « En bas de slide : airlines.csv fait la correspondance code → nom de compagnie, airports.csv apporte ville, État et coordonnées — tous deux joints au fichier des vols par le code IATA. »
+
+### A — Slide 3 (traitements) — 2 min à 2 min 30
+
+**Étape 1 — Nettoyer (~50 s).** « Premier réflexe avant toute analyse : l'audit des valeurs manquantes et des incohérences. Deux découvertes ont structuré la suite.
+La première : `ARRIVAL_DELAY` manque pour 105 071 vols. Plutôt que de supprimer ou d'imputer à l'aveugle, nous avons cherché *pourquoi* — et le croisement le prouve : ce sont exactement les 89 884 vols annulés plus les 15 187 déroutés. Un vol qui n'a jamais atterri comme prévu n'a pas de retard d'arrivée : c'est un manquant structurel, pas accidentel. La décision qui en découle : les exclure du périmètre des retards. Si on ne le fait pas, le test "retard ≥ 15 minutes" renvoie faux pour eux et ils sont silencieusement comptés comme des vols à l'heure — le taux serait artificiellement abaissé.
+La seconde : les colonnes aéroports contiennent normalement des codes à trois lettres, mais une partie des lignes porte des identifiants numériques — et 100 % de ces lignes sont en octobre. Ce mois utilise un autre référentiel, impossible à joindre à notre table des aéroports : une même liaison y apparaîtrait sous deux noms. Le dataset ne fournit pas de table de conversion ; nous avons donc écarté octobre — mais uniquement de l'analyse des routes, et après avoir chiffré le coût : octobre pèse 8,4 % des vols mais seulement 2,7 % des annulations, c'est le mois le plus calme de l'année — 0,50 % d'annulations contre 1,54 % en moyenne. Les hypothèses 1 et 2 conservent les douze mois. »
+
+**Étape 2 — Construire (~40 s).** « Ensuite, les variables d'analyse — chacune définie explicitement pour être discutable et reproductible.
+Le retard : arrivée à 15 minutes ou plus — ce n'est pas notre choix, c'est la norme du régulateur américain. Et nous raisonnons en *taux de vols en retard*, pas en moyenne : le retard médian du pays est de −5 minutes quand la moyenne est à +4,4 — la majorité des vols arrivent en avance, une minorité très en retard tire la moyenne : elle serait trompeuse.
+Le vol long : 1 500 miles ou plus, la distance d'un vol qui traverse une bonne partie du pays — et nous testerons la sensibilité à 1 000 et 2 000 miles.
+Les fenêtres de vacances 2015, bornées date à date : l'été du 1er juin au 31 août, le Nouvel An du 1er au 5 janvier, Thanksgiving du 20 au 30 novembre, Noël du 18 au 31 décembre. C'est un proxy assumé — le dataset n'a pas de colonne vacances — borné explicitement pour être critiquable.
+Et les routes : le couple orienté origine→destination — Boston→LaGuardia est distinct de LaGuardia→Boston, car rien ne dit que les deux sens se comportent pareil ; nous vérifierons aussi en non orienté. »
+
+**Étape 3 — Analyser (~30 s).** « Enfin les traitements analytiques : des agrégations par jour et par mois pour les séries temporelles, par compagnie — quatorze — pour l'hypothèse 2, par route — 4 693 — pour l'hypothèse 3. Et trois principes transverses : mesurer des *parts* — quelle part des retards vient des vols longs ; comparer à une *référence comparable* — chaque période de vacances face au reste de son propre mois, pour neutraliser la saison ; et rapporter toute concentration à celle du trafic — sinon on mesure la taille des routes, pas leur fragilité. Chaque résultat est ensuite retesté sur d'autres seuils et périmètres. »
+
+**La chute (~10 s).** « Le tout tient dans un pipeline reproductible : les 592 Mo sont chargés en types compacts — environ 350 Mo en mémoire — et la chaîne complète s'exécute en une centaine de secondes. Aucun chiffre n'est écrit à la main : tableaux, graphiques et dashboard sont régénérés à chaque exécution du notebook. »
 
 ### B, C, D — Slide 4 (hypothèses) — 1 min
 
@@ -106,6 +132,12 @@ Chacun lit la sienne, sans commentaire (le prof ne veut pas de paragraphes sous 
 **[A] Pourquoi 2015 ? Est-ce généralisable ?** → C'est le dataset de référence publié par le DOT, année complète et propre. Les mécanismes mis en évidence (marges horaires, météo hivernale, modèle low-cost) sont structurels, mais on ne prétend pas extrapoler les chiffres exacts à d'autres années.
 
 **[A] Pourquoi exclure octobre plutôt que convertir les codes ?** → La table de correspondance DOT↔IATA n'est pas dans le dataset. Convertir avec une source externe ajoutait un risque d'erreur ; exclure coûte 2,7 % des annulations et on a vérifié que le résultat H3 n'en dépend pas.
+
+**[A] Pourquoi analyser le retard à l'arrivée plutôt qu'au départ ?** → C'est le retard vécu à destination qui compte pour le passager ; et l'écart entre départ et arrivée mesure le rattrapage en vol, exploité dans H2.
+
+**[A] Que contiennent les colonnes que vous n'avez pas chargées ?** → Le détail opérationnel : roulage (TAXI_OUT/IN), heures réelles de décollage et d'atterrissage (WHEELS_OFF/ON), durées (SCHEDULED_TIME, ELAPSED_TIME, AIR_TIME), immatriculation (TAIL_NUMBER). Rien qui serve nos trois hypothèses — et 12 colonnes de moins, c'est autant de mémoire économisée.
+
+**[A] Comment fonctionnent les 5 colonnes de causes de retard ?** → Elles ne sont renseignées que pour les vols arrivés avec 15 minutes ou plus de retard, et ventilent les minutes par responsabilité. Leur agrégation donne le panorama : l'avion précédent en retard est la première source de minutes de retard ; la météo est le premier motif d'annulation (54 %).
 
 **[A] Médiane négative, comment l'expliquer ?** → La distribution des retards est asymétrique : beaucoup de petites avances, une minorité de gros retards qui tirent la moyenne. C'est exactement le cas d'école moyenne/médiane du cours.
 
